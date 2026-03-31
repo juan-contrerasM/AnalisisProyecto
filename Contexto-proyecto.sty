@@ -7,35 +7,34 @@ que permitan comparar, agrupar y analizar series de tiempo financieras de forma 
 Este proyecto tiene como objetivo aplicar métodos cuantitativos, algoritmos clásicos y técnicas de
 análisis de series temporales sobre datos reales provenientes de la Bolsa de Valores de Colombia
 (BVC) y de activos globales relevantes para el inversor local, como índices bursátiles y ETFs
-internacionales (S&amp;P 500). El enfoque principal del proyecto se centra en el análisis algorítmico del
+internacionales (S&P 500). El enfoque principal del proyecto se centra en el análisis algorítmico del
 comportamiento histórico de precios, retornos y volatilidad, con el fin de establecer relaciones de
 similitud, detectar patrones recurrentes y construir agrupamientos basados exclusivamente en
 criterios matemáticos y computacionales.
 
 2. Fuentes de información
 El dominio de conocimiento del proyecto será el comportamiento histórico de acciones y ETFs. Los
-estudiantes deberán obtener información financiera a partir de fuentes abiertas o APIs públicas,
-tales como Yahoo Finance, Google Finance, APIs oficiales de la BVC o técnicas de scraping ético
-sobre portales financieros de libre acceso (por ejemplo, Investing o plataformas con información
-pública).
+estudiantes deberán obtener información financiera a partir de fuentes abiertas o APIs públicas, tales
+como Yahoo Finance, Google Finance, APIs oficiales de la BVC o técnicas de scraping ético sobre
+portales financieros de libre acceso (por ejemplo, Investing o plataformas con información pública).
 La información mínima requerida para cada activo deberá incluir entre otros:
- Fecha
- Precio de apertura (Open)
- Precio de cierre (Close)
- Precio máximo (High)
- Precio mínimo (Low)
- Volumen de negociación
+• Fecha
+• Precio de apertura (Open)
+• Precio de cierre (Close)
+• Precio máximo (High)
+• Precio mínimo (Low)
+• Volumen de negociación
 Los datos deberán corresponder a un horizonte histórico suficientemente amplio para permitir
-análisis algorítmicos significativos. En la medida que avance el proyecto, es posible que se
-identifique otro tipo de información complementaria para adicionar al proyecto.
+análisis algorítmicos significativos. En la medida que avance el proyecto, es posible que se identifique
+otro tipo de información complementaria para adicionar al proyecto.
 3. Propósito del proyecto
 El propósito del proyecto es diseñar e implementar una serie de algoritmos que permita realizar
 análisis técnico, estadístico y comparativo de activos financieros, haciendo énfasis en la eficiencia
-computacional, la correcta fundamentación matemática de las métricas utilizadas y el análisis
-formal de la complejidad algorítmica. El proyecto busca que los estudiantes comprendan cómo
-problemas reales del análisis financiero pueden modelarse y resolverse mediante algoritmos bien
-definidos, y cómo diferentes enfoques algorítmicos producen resultados distintos en términos de
-precisión y costo computacional.
+computacional, la correcta fundamentación matemática de las métricas utilizadas y el análisis formal
+de la complejidad algorítmica. El proyecto busca que los estudiantes comprendan cómo problemas
+reales del análisis financiero pueden modelarse y resolverse mediante algoritmos bien definidos, y
+cómo diferentes enfoques algorítmicos producen resultados distintos en términos de precisión y
+costo computacional.
 A continuación se hace una descripción de los requerimientos funcionales del proyecto.
 
 Requerimiento 1. Automatización del proceso de extracción, limpieza y unificación de datos (ETL).
@@ -49,51 +48,55 @@ series de tiempo y la consistencia entre los activos analizados. El proceso de u
 manejar adecuadamente diferencias entre calendarios bursátiles, días festivos y posibles
 desalineaciones temporales entre fuentes.
 Adicionalmente, se deberán implementar algoritmos de limpieza de datos que permitan detectar y
-manejar valores faltantes, registros inconsistentes o anomalías en las series. Dependiendo del
-caso, se deberá justificar el uso de técnicas como interpolación, eliminación de registros o
-corrección de valores, explicando el impacto algorítmico de estas decisiones sobre los análisis
-posteriores.
-Requerimiento 2. El propósito de esta actividad es analizar y comparar el desempeño de diferentes
-métodos de ordenamiento. Se solicita la Tabla 1. En la columna tamaño se debe indicar el valor
-entero del dato y en la columna tiempo se debe indicar el tiempo que tarda en ordenar cada
-algoritmo.
+manejar valores faltantes, registros inconsistentes o anomalías en las series. Dependiendo del caso,
+se deberá justificar el uso de técnicas como interpolación, eliminación de registros o corrección de
+valores, explicando el impacto algorítmico de estas decisiones sobre los análisis posteriores.
+Requerimiento 2. Algoritmos de similitud de series de tiempo (análisis comparativo)
+Se deben implementar al menos cuatro algoritmos de similitud entre series de tiempo, entre los
+cuales se pueden incluir:
+• Distancia euclidiana aplicada a precios o retornos.
+• Correlación de Pearson para medir la relación lineal entre activos.
+• Dynamic Time Warping (DTW) para comparar secuencias que pueden diferir en velocidad o
+fase.
+• Similitud por coseno aplicada a vectores de rendimientos diarios.
+La aplicación deberá permitir al usuario seleccionar dos activos, visualizar sus series temporales y
+mostrar los valores de similitud calculados por cada algoritmo. Para cada método, se deberá
+presentar una explicación matemática, una descripción algorítmica detallada y el análisis de su
+complejidad computacional, destacando las diferencias entre los enfoques implementados.
+Requerimiento 3. Análisis de frecuencia de patrones y medición de volatilidad
+Se deberá implementar un algoritmo basado en ventanas deslizantes (sliding window) que recorra
+el historial de precios y detecte la frecuencia de patrones previamente definidos. Un ejemplo de
+patrón puede ser secuencias de días consecutivos al alza. Se debe definir un patrón adicional el cual
+deberá estar claramente formalizado.
+Adicionalmente, se deberán calcular métricas de dispersión, como la desviación estándar y la
+volatilidad histórica, para clasificar cada instrumento financiero individual (acción o ETF) del portafolio
+en categorías de riesgo, tales como conservadores, moderados y agresivos. Como resultado, el
+sistema deberá generar un listado de activos ordenados según su nivel de riesgo, calculado de
+manera estrictamente algorítmica.
+Requerimiento 4. Análisis visual y construcción de un dashboard bursátil
+El sistema deberá incluir un componente visual que facilite la interpretación de los resultados
+algorítmicos. En particular, se deberán generar las siguientes visualizaciones:
 
-Tabla 1 . Análisis de datos enteros
-
-Método de ordenamiento Tamaño Tiempo
-1. TimSort O( )
-2. Comb Sort O( )
-3. Selection Sort O( )
-4. Tree Sort O( )
-5. Pigeonhole Sort O( )
-6. BucketSort O( )
-7. QuickSort O( )
-8. HeapSort O( )
-9. Bitonic Sort O ( )
-10. Gnome Sort O ( )
-11. Binary Insertion Sort O( )
-12. RadixSort O ( )
-Con base en los datos de la tabla 1, se solicita:
- Ordenar de manera ascendente cada uno de los registros a partir del archivo unificado en
-la automatización. El ordenamiento se debe realizar teniendo en cuenta la fecha de
-cotización del activo. Cuando los registros tengan la misma fecha, el siguiente criterio de
-ordenamiento es el precio de cierre.
- Representar en un diagrama de barras y de manera ascendente los tiempos de los (12)
-algoritmos de ordenamiento.
- Ordenar de manera ascendente los quince primeros días con mayor volumen de
-negociación para los activos.
-
+• Una matriz de correlación representada como mapa de calor, que muestre las relaciones
+entre todos los activos analizados.
+• Gráficos de velas (candlestick) para activos seleccionados, incorporando medias móviles
+simples calculadas algorítmicamente.
+El sistema deberá permitir la exportación de un reporte técnico en formato PDF que consolide los
+análisis visuales y numéricos realizados.
+Requerimiento 5. Despliegue y documentación técnica
+Finalmente, el proyecto deberá estar desplegado como una aplicación funcional como aplicación
+web.
 Documento final:
 El proyecto debe estar soportado en un documento de diseño con la correspondiente arquitectura.
-Se debe presentar para cada requerimiento una explicación técnica con detalles de
-implementación. El uso de IA debe estar debidamente fundamentado y se proporcionará un
-documento con los aspectos que deben ser considerados.
+Se debe presentar para cada requerimiento una explicación técnica con detalles de implementación.
+El uso de IA debe estar debidamente fundamentado y se proporcionará un documento con los
+aspectos que deben ser considerados.
 Se restringe el uso de librerías de alto nivel que encapsulen la adquisición de datos financieros en
-una sola llamada. En particular, no se permite el uso de librerías como yfinance,
-pandas_datareader u otras equivalentes para la descarga principal de la información. La obtención
-de los datos deberá realizarse mediante peticiones explícitas a APIs públicas o recursos web,
-implementando de manera directa los procesos de construcción de consultas, manejo de errores,
-parsing de las respuestas y almacenamiento de los datos.
+una sola llamada. En particular, no se permite el uso de librerías como yfinance, pandas_datareader
+u otras equivalentes para la descarga principal de la información. La obtención de los datos deberá
+realizarse mediante peticiones explícitas a APIs públicas o recursos web, implementando de manera
+directa los procesos de construcción de consultas, manejo de errores, parsing de las respuestas y
+almacenamiento de los datos.
 La descarga principal de los datos deberá realizarse mediante peticiones explícitas a APIs públicas
 o a recursos web (por ejemplo, solicitudes HTTP directas), implementando manualmente los
 procesos de construcción de consultas, manejo de errores, parsing de respuestas y consolidación
@@ -102,28 +105,30 @@ manejo de estructuras de datos básicas sí está permitido.
 Adicionalmente, no se acepta el uso de funciones de alto nivel que implementen directamente los
 algoritmos solicitados en el proyecto, tales como medidas de similitud, algoritmos de agrupamiento
 o técnicas de análisis de series temporales encapsuladas en una sola función. Los algoritmos
-deberán ser implementados de forma explícita por los estudiantes, utilizando estructuras básicas
-del lenguaje de programación elegido, de manera que el comportamiento algorítmico sea
+deberán ser implementados de forma explícita por los estudiantes, utilizando estructuras básicas del
+lenguaje de programación elegido, de manera que el comportamiento algorítmico sea
 completamente transparente y analizable.
 En relación con el uso de librerías de aprendizaje automático, su empleo estará restringido
 exclusivamente a los requerimientos en los que se indique explícitamente su utilización. En estos
 casos, los estudiantes deberán demostrar comprensión del funcionamiento interno del algoritmo
-utilizado, presentando su formulación matemática. El uso de modelos de aprendizaje automático
-no podrá sustituir la implementación y análisis de los algoritmos clásicos exigidos en el proyecto.
-No se permite el uso de datasets estáticos descargados manualmente o proporcionados por
-terceros como insumo principal del proyecto. La información utilizada deberá ser obtenida
-mediante procesos automáticos desarrollados por los estudiantes, de tal forma que el sistema
-pueda reproducir la descarga y construcción del dataset maestro desde cero. En este sentido, la
-reproducibilidad es un requisito fundamental: un evaluador debe poder ejecutar el proyecto
-siguiendo la documentación proporcionada y obtener resultados equivalentes sin necesidad de
-ajustes manuales.
+utilizado, presentando su formulación matemática. El uso de modelos de aprendizaje automático no
+podrá sustituir la implementación y análisis de los algoritmos clásicos exigidos en el proyecto.
+No se permite el uso de datasets estáticos descargados manualmente o proporcionados por terceros
+como insumo principal del proyecto. La información utilizada deberá ser obtenida mediante procesos
+automáticos desarrollados por los estudiantes, de tal forma que el sistema pueda reproducir la
+descarga y construcción del dataset maestro desde cero. En este sentido, la reproducibilidad es un
+requisito fundamental: un evaluador debe poder ejecutar el proyecto siguiendo la documentación
+proporcionada y obtener resultados equivalentes sin necesidad de ajustes manuales.
+
 En caso de utilizar técnicas de scraping para la obtención de información, estas deberán realizarse
 de forma ética y responsable, respetando los límites de acceso, las políticas de uso de los sitios
 consultados y las buenas prácticas asociadas a este tipo de técnicas.
 El uso de herramientas de inteligencia artificial generativa como apoyo al desarrollo del proyecto
 deberá ser declarado explícitamente. Dichas herramientas podrán utilizarse como soporte, pero no
 podrán reemplazar el diseño algorítmico ni el análisis formal solicitado en el curso.
-
-Nota: En el contexto de este proyecto, el término “activo” hace referencia a un instrumento
+Nota 1: En caso de ser necesario, la presente descripción del proyecto puede ser modificada para
+efectos de dar mayor claridad en su especificación. En particular con los requerimientos funcionales
+los cuales podrán ser explicados con mayor detalle.
+Nota 2: En el contexto de este proyecto, el término “activo” hace referencia a un instrumento
 financiero individual (acción o ETF) representado por una serie de tiempo histórica de precios o
 retornos.

@@ -1,0 +1,192 @@
+<div class="page-head">
+  <h1>Visualizaciones avanzadas</h1>
+  <p class="sub">
+    Herramientas del dashboard bursátil: correlaciones entre activos, velas diarias con tendencia suavizada (SMA) y exportación de un informe técnico.
+  </p>
+</div>
+
+<article class="intro-block">
+  <h3 class="intro-block__title">Qué verás en esta página</h3>
+  <ul class="intro-block__list">
+    <li>
+      <strong>Matriz de correlación</strong>: cada celda es el coeficiente de Pearson entre los <em>retornos diarios</em> de dos activos, usando solo días donde ambos tienen dato (series alineadas). Valores cercanos a <strong>+1</strong> indican movimientos más parecidos; cercanos a <strong>−1</strong>, tendencias opuestas; cerca de <strong>0</strong>, poca relación lineal.
+    </li>
+    <li>
+      <strong>Velas japonesas (OHLC)</strong>: cada vela resume un día — <strong>O</strong> apertura, <strong>H</strong> máximo, <strong>L</strong> mínimo, <strong>C</strong> cierre. El cuerpo y las mechas muestran el rango y la presión compradora/vendedora. La línea <strong>amarilla</strong> es la <strong>media móvil simple (SMA)</strong> del <em>cierre</em>: promedio aritmético de los últimos <em>N</em> cierres (tú eliges <em>N</em>); ayuda a ver la tendencia filtrando el ruido diario.
+    </li>
+    <li>
+      <strong>Informe PDF</strong>: resume en un documento el ranking de riesgo/volatilidad, patrones por ventana y un extracto de la matriz de correlación, útil para entregas o archivo.
+    </li>
+  </ul>
+</article>
+
+<section class="pdf-panel" aria-label="Exportar informe PDF">
+  <div class="pdf-panel__icon" aria-hidden="true">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linejoin="round"
+      />
+      <path d="M14 2v6h6" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+      <path d="M8 13h8M8 17h8M8 9h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+    </svg>
+  </div>
+  <div class="pdf-panel__body">
+    <h3 class="pdf-panel__heading">Informe técnico en PDF</h3>
+    <p class="pdf-panel__desc">
+      Documento con portada, metadatos del ETL, tabla de ranking (σ diaria, volatilidad anualizada, riesgo, conteos de patrones) y bloques de correlación con formato legible.
+    </p>
+  </div>
+  <button
+    type="button"
+    class="pdf-panel__action"
+    (click)="downloadPdf()"
+    [disabled]="!status.dataReady()"
+    title="Genera y descarga el PDF en tu carpeta de descargas"
+  >
+    <span class="pdf-panel__action-label">Generar PDF</span>
+    <span class="pdf-panel__action-hint">Listo cuando el ETL está en estado LISTO</span>
+  </button>
+</section>
+
+@if (!status.dataReady()) {
+  <div class="empty">Ejecute el ETL y espere estado LISTO para ver correlaciones y velas.</div>
+  <app-page-skeleton [height]="160" />
+} @else {
+  <section class="panel viz-unified">
+    <header class="viz-unified__head">
+      <h2 class="viz-unified__title">Correlación, velas y SMA (disposición vertical)</h2>
+      <p class="viz-unified__lede">
+        Cada gráfico ocupa todo el ancho disponible, uno debajo del otro: primero la matriz, luego las velas y al final la SMA.
+      </p>
+    </header>
+
+    <div class="toolbar toolbar--charts toolbar--viz-full">
+      <label class="field">
+        Activo
+        <select [value]="candleSymbol()" (change)="onCandleSymbolChange($any($event.target).value)">
+          @for (s of status.symbols(); track s) {
+            <option [value]="s">{{ s }}</option>
+          }
+        </select>
+      </label>
+      <label class="field field--time-unit">
+        Eje temporal
+        <select [value]="timeScaleUnit()" (change)="onTimeUnitChange($any($event.target).value)">
+          @for (opt of timeUnitChoices; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </label>
+      <label class="field">
+        Ventana SMA (días)
+        <input
+          type="number"
+          min="5"
+          max="120"
+          [value]="smaWindow()"
+          (change)="onSmaWindowChange($any($event.target).value)"
+        />
+      </label>
+      <button type="button" class="toolbar-reload" (click)="reloadCandles()" title="Volver a pedir OHLC y SMA al servidor">
+        <svg class="toolbar-reload__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M4 12a8 8 0 0 1 8-8V2l4 4-4 4V8a4 4 0 1 0 4 4h2a6 6 0 1 1-6-6"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        <span>Recargar OHLC</span>
+      </button>
+    </div>
+
+    @if (candleError()) {
+      <p class="err">{{ candleError() }}</p>
+    }
+
+    <div class="viz-row" role="region" aria-label="Visualizaciones en columna: matriz, velas y SMA">
+      <div class="viz-cell viz-cell--matrix">
+        <h3 class="viz-cell__title">1 · Matriz de correlación</h3>
+        <p class="viz-cell__hint">
+          Pearson sobre retornos alineados. Diagonal = 1. Colores de −1 (rojizo) a +1 (verdoso).
+        </p>
+        @if (!status.correlationMatrix()) {
+          <app-page-skeleton [height]="220" />
+        } @else {
+          @let cm = status.correlationMatrix()!;
+          <div class="heatmap-scroll heatmap-scroll--stack">
+            <table class="heatmap">
+              <thead>
+                <tr>
+                  <th class="corner"></th>
+                  @for (c of cm.symbols; track c) {
+                    <th [title]="c">{{ c }}</th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of cm.matrix; track $index; let i = $index) {
+                  <tr>
+                    <th class="row-label">{{ cm.symbols[i] }}</th>
+                    @for (cell of row; track j; let j = $index) {
+                      <td [ngStyle]="corrCellStyle(cell)">{{ cell | number: '1.2-2' }}</td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="legend-scale legend-scale--compact">
+            <span>−1</span>
+            <span class="legend-bar" aria-hidden="true"></span>
+            <span>+1</span>
+          </div>
+        }
+      </div>
+
+      <div class="viz-cell viz-cell--ohlc">
+        <h3 class="viz-cell__title">2 · Velas OHLC</h3>
+        <p class="viz-cell__hint">
+          Verde: cierre mayor que apertura. Rojo: cierre menor que apertura. Datos de cierre diario.
+        </p>
+        <div class="chart-host chart-host--ohlc chart-host--stack">
+          @if (candleLoading()) {
+            <div class="chart-host__overlay">
+              <app-page-skeleton [height]="320" />
+            </div>
+          }
+          @if (!candleLoading() && candlePoints().length === 0) {
+            <div class="chart-host__empty">Sin puntos OHLC. Recargue o ejecute el ETL.</div>
+          }
+          <canvas
+            #candleCanvas
+            class="chart-host__canvas"
+            [class.chart-host__canvas--hidden]="candlePoints().length === 0"
+          ></canvas>
+        </div>
+      </div>
+
+      <div class="viz-cell viz-cell--sma">
+        <h3 class="viz-cell__title">3 · SMA del cierre</h3>
+        <p class="viz-cell__hint">
+          Media móvil en canvas aparte (compatibilidad con Chart.js). Misma escala temporal que las velas.
+        </p>
+        <div class="chart-host chart-host--sma chart-host--stack" aria-label="Media móvil simple del cierre">
+          <canvas
+            #smaCanvas
+            class="chart-host__canvas"
+            [class.chart-host__canvas--hidden]="candlePoints().length === 0"
+          ></canvas>
+        </div>
+      </div>
+    </div>
+
+    <p class="viz-row__note">
+      <strong>Eje temporal</strong>: los datos son EOD; en hora/minuto las marcas refieren al instante de cierre.
+    </p>
+  </section>
+}

@@ -5,6 +5,7 @@ import { catchError, finalize, switchMap, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import {
   AnalysisResponse,
+  CorrelationMatrixResponse,
   DatasetRow,
   EtlStatusResponse,
   SyncState,
@@ -24,6 +25,7 @@ export class AppStatusService {
   readonly symbols = signal<string[]>([]);
   readonly dataset = signal<DatasetRow[]>([]);
   readonly analysis = signal<AnalysisResponse | null>(null);
+  readonly correlationMatrix = signal<CorrelationMatrixResponse | null>(null);
 
   private refreshLock = false;
   /** Marca de tiempo de la última recarga pesada exitosa (throttle). */
@@ -232,11 +234,13 @@ export class AppStatusService {
       symbols: this.api.getSymbols(),
       dataset: this.api.getDataset(),
       analysis: this.api.getAnalysis(),
+      correlation: this.api.getCorrelationMatrix(),
     }).pipe(
-      tap(({ symbols, dataset, analysis }) => {
+      tap(({ symbols, dataset, analysis, correlation }) => {
         this.symbols.set(symbols);
         this.dataset.set(dataset);
         this.analysis.set(analysis);
+        this.correlationMatrix.set(correlation);
         this.lastHeavySuccessAt = Date.now();
       }),
       catchError((err: Error) => {

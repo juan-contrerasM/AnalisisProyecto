@@ -24,4 +24,12 @@ public interface ETLService {
     boolean isEtlReady();
 
     List<StockData> retrieveVolumeAsc();
+
+    /** Matriz de correlación de Pearson entre retornos diarios (pares alineados por fecha). */
+    Map<String, Object> obtenerMatrizCorrelacion();
+
+    /**
+     * OHLC diario con media móvil simple del cierre ({@code window} períodos), últimos {@code limit} días con datos completos.
+     */
+    Map<String, Object> obtenerOhlcConSma(String symbol, int window, int limit);
 }

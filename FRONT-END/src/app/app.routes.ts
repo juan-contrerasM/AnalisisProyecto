@@ -32,6 +32,11 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/ordenamiento/ordenamiento.routes').then((m) => m.ORDENAMIENTO_ROUTES),
       },
+      {
+        path: 'visualizaciones',
+        loadChildren: () =>
+          import('./features/visualizaciones/visualizaciones.routes').then((m) => m.VISUALIZACIONES_ROUTES),
+      },
     ],
   },
 ];

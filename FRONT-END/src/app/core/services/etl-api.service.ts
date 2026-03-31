@@ -5,6 +5,8 @@ import { apiBaseUrl } from '../config/app-config';
 import {
   AnalysisResponse,
   AssetVolumeDay,
+  CandlestickResponse,
+  CorrelationMatrixResponse,
   DatasetRow,
   EtlStatusResponse,
   SeriesResponse,
@@ -49,6 +51,23 @@ export class EtlApiService {
         return throwError(() => e);
       }),
     );
+  }
+
+  getCorrelationMatrix(): Observable<CorrelationMatrixResponse | null> {
+    return this.http.get<CorrelationMatrixResponse>(`${this.base}/correlation-matrix`).pipe(
+      catchError((e: HttpErrorResponse) => {
+        if (e.status === 503) {
+          return of(null);
+        }
+        return throwError(() => e);
+      }),
+    );
+  }
+
+  getCandlestick(symbol: string, window = 20, limit = 120): Observable<CandlestickResponse> {
+    return this.http.get<CandlestickResponse>(`${this.base}/candlestick`, {
+      params: { symbol, window: String(window), limit: String(limit) },
+    });
   }
 
   getSimilarity(asset1: string, asset2: string): Observable<SimilarityResult> {

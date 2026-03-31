@@ -14,6 +14,7 @@ export class AnalisisPageComponent {
 
   protected readonly columns: DataColumn[] = [
     { key: 'activo', label: 'Activo' },
+    { key: 'desviacionDiaria', label: 'σ diaria' },
     { key: 'volatilidad', label: 'Volatilidad' },
     { key: 'riesgo', label: 'Riesgo' },
     { key: 'subida3', label: 'Patrón ↑×3' },
@@ -25,6 +26,10 @@ export class AnalisisPageComponent {
     const r = this.status.analysis()?.ranking ?? [];
     return r.map((x) => ({
       activo: x.activo,
+      desviacionDiaria:
+        x.desviacionDiaria !== undefined && x.desviacionDiaria !== null
+          ? Number(x.desviacionDiaria).toFixed(6)
+          : '—',
       volatilidad: x.volatilidad,
       riesgo: x.riesgo,
       subida3: x.patrones.subida3,

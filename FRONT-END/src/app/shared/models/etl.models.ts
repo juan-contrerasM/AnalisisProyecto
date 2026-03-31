@@ -18,6 +18,8 @@ export interface PatronesActivo {
 
 export interface RankingActivo {
   activo: string;
+  /** Desviación estándar de retornos diarios (dispersión). */
+  desviacionDiaria?: number;
   volatilidad: number;
   riesgo: string;
   patrones: PatronesActivo;
@@ -27,12 +29,36 @@ export interface AnalysisResponse {
   ranking: RankingActivo[];
 }
 
+/** Respuesta de `GET /etl/correlation-matrix` (Pearson sobre retornos alineados). */
+export interface CorrelationMatrixResponse {
+  symbols: string[];
+  matrix: number[][];
+}
+
+export interface CandlestickPoint {
+  date: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  sma: number | null;
+}
+
+export interface CandlestickResponse {
+  symbol: string;
+  window: number;
+  limit: number;
+  points: CandlestickPoint[];
+}
+
 export interface SimilarityResult {
   euclidiana: number;
   pearson: number;
   coseno: number;
   dtw: number;
   interpretacion: string;
+  /** Observaciones alineadas usadas en el cálculo (si el backend lo envía). */
+  puntosAlineados?: number;
 }
 
 export type SeriesResponse = Record<string, number[]>;

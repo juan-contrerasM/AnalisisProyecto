@@ -107,9 +107,6 @@ public class ETLServiceImpl implements ETLService {
             // IMPORTANTE
             this.retornosGlobal = retornos;
 
-            // ANALIZAR
-            this.resultadoReq3 = analizarRequerimiento3(retornos, PORTFOLIO_SYMBOLS);
-
             this.datasetGlobal = dataset;
             this.retornosGlobal = retornos;
             this.resultadoReq3 = analizarRequerimiento3(retornos, PORTFOLIO_SYMBOLS);
@@ -406,19 +403,38 @@ public class ETLServiceImpl implements ETLService {
         return retornos;
     }
 
+    /** Retornos diarios alineados: solo fechas donde ambos activos tienen dato numérico. */
+    private void extraerParAlineado(String asset1, String asset2, List<Double> out1, List<Double> out2) {
+        out1.clear();
+        out2.clear();
+        for (Map<String, Object> fila : retornosGlobal) {
+            Object o1 = fila.get(asset1);
+            Object o2 = fila.get(asset2);
+            if (o1 instanceof Number && o2 instanceof Number) {
+                out1.add(((Number) o1).doubleValue());
+                out2.add(((Number) o2).doubleValue());
+            }
+        }
+    }
+
     // SIMILITUD
     @Override
     public Map<String, Object> calcularSimilitud(String asset1, String asset2) {
         requireData();
         List<Double> serie1 = new ArrayList<>();
         List<Double> serie2 = new ArrayList<>();
-
-        for (Map<String, Object> fila : retornosGlobal) {
-            serie1.add((Double) fila.get(asset1));
-            serie2.add((Double) fila.get(asset2));
-        }
+        extraerParAlineado(asset1, asset2, serie1, serie2);
 
         Map<String, Object> resultado = new HashMap<>();
+        if (serie1.size() < 2) {
+            resultado.put("euclidiana", 0.0);
+            resultado.put("pearson", 0.0);
+            resultado.put("coseno", 0.0);
+            resultado.put("dtw", 0.0);
+            resultado.put("interpretacion", "Sin observaciones alineadas suficientes");
+            resultado.put("puntosAlineados", serie1.size());
+            return resultado;
+        }
 
         double e = similarityService.euclidean(serie1, serie2);
         double p = similarityService.pearson(serie1, serie2);
@@ -429,7 +445,7 @@ public class ETLServiceImpl implements ETLService {
         resultado.put("pearson", p);
         resultado.put("coseno", c);
         resultado.put("dtw", d);
-
+        resultado.put("puntosAlineados", serie1.size());
         resultado.put("interpretacion", interpretar(p));
 
         return resultado;
@@ -448,16 +464,12 @@ public class ETLServiceImpl implements ETLService {
 
     @Override
     public Map<String, List<Double>> obtenerSeries(String asset1, String asset2) {
-
+        requireData();
         List<Double> serie1 = new ArrayList<>();
         List<Double> serie2 = new ArrayList<>();
+        extraerParAlineado(asset1, asset2, serie1, serie2);
 
-        for (Map<String, Object> fila : retornosGlobal) {
-            serie1.add((Double) fila.get(asset1));
-            serie2.add((Double) fila.get(asset2));
-        }
-
-        Map<String, List<Double>> resultado = new HashMap<>();
+        Map<String, List<Double>> resultado = new LinkedHashMap<>();
         resultado.put(asset1, serie1);
         resultado.put(asset2, serie2);
 
@@ -477,16 +489,21 @@ public class ETLServiceImpl implements ETLService {
             List<Double> serie = new ArrayList<>();
 
             for (Map<String, Object> fila : retornos) {
-                serie.add((Double) fila.get(symbol));
+                Object o = fila.get(symbol);
+                if (o instanceof Number) {
+                    serie.add(((Number) o).doubleValue());
+                }
             }
 
-            double vol = volatilidad(serie);
+            double desv = desviacion(serie);
+            double vol = desv * Math.sqrt(252);
             String riesgo = clasificarRiesgo(vol);
 
             Map<String, Integer> patrones = detectarPatrones(serie);
 
             Map<String, Object> activo = new HashMap<>();
             activo.put("activo", symbol);
+            activo.put("desviacionDiaria", desv);
             activo.put("volatilidad", vol);
             activo.put("riesgo", riesgo);
             activo.put("patrones", patrones);
@@ -537,6 +554,133 @@ public class ETLServiceImpl implements ETLService {
         return resultadoReq3;
     }
 
+    @Override
+    public Map<String, Object> obtenerMatrizCorrelacion() {
+        requireData();
+        List<String> symbols = new ArrayList<>(PORTFOLIO_SYMBOLS);
+        int n = symbols.size();
+        List<List<Double>> matrix = new ArrayList<>(n);
+        List<Double> tmp1 = new ArrayList<>();
+        List<Double> tmp2 = new ArrayList<>();
+
+        for (int i = 0; i < n; i++) {
+            List<Double> row = new ArrayList<>(n);
+            for (int j = 0; j < n; j++) {
+                if (i == j) {
+                    row.add(1.0);
+                } else {
+                    extraerParAlineado(symbols.get(i), symbols.get(j), tmp1, tmp2);
+                    if (tmp1.size() < 2) {
+                        row.add(0.0);
+                    } else {
+                        row.add(similarityService.pearson(tmp1, tmp2));
+                    }
+                }
+            }
+            matrix.add(row);
+        }
+
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("symbols", symbols);
+        out.put("matrix", matrix);
+        return out;
+    }
+
+    @Override
+    public Map<String, Object> obtenerOhlcConSma(String symbol, int window, int limit) {
+        requireData();
+        if (symbol == null || symbol.isBlank()) {
+            throw new IllegalArgumentException("Indique un símbolo.");
+        }
+        String sym = symbol.trim().toUpperCase(Locale.ROOT);
+        if (!PORTFOLIO_SYMBOLS.contains(sym)) {
+            throw new IllegalArgumentException("Símbolo no pertenece al portafolio ETL.");
+        }
+        if (window < 1) {
+            window = 20;
+        }
+        if (limit < 1) {
+            limit = 120;
+        }
+        limit = Math.min(limit, 500);
+
+        String kOpen = sym + "_open";
+        String kHigh = sym + "_high";
+        String kLow = sym + "_low";
+        String kClose = sym + "_close";
+
+        List<LocalDate> fechas = new ArrayList<>();
+        List<Double> opens = new ArrayList<>();
+        List<Double> highs = new ArrayList<>();
+        List<Double> lows = new ArrayList<>();
+        List<Double> closes = new ArrayList<>();
+
+        for (Map<String, Object> fila : datasetGlobal) {
+            Object dObj = fila.get("date");
+            LocalDate fecha = null;
+            if (dObj instanceof LocalDate ld) {
+                fecha = ld;
+            } else if (dObj instanceof String s && !s.isBlank()) {
+                try {
+                    fecha = LocalDate.parse(s.trim());
+                } catch (java.time.format.DateTimeParseException ignored) {
+                    /* formato inesperado */
+                }
+            }
+            if (fecha == null) {
+                continue;
+            }
+            Object o = fila.get(kOpen);
+            Object h = fila.get(kHigh);
+            Object l = fila.get(kLow);
+            Object c = fila.get(kClose);
+            if (!(o instanceof Number) || !(h instanceof Number) || !(l instanceof Number) || !(c instanceof Number)) {
+                continue;
+            }
+            fechas.add(fecha);
+            opens.add(((Number) o).doubleValue());
+            highs.add(((Number) h).doubleValue());
+            lows.add(((Number) l).doubleValue());
+            closes.add(((Number) c).doubleValue());
+        }
+
+        int total = fechas.size();
+        int from = Math.max(0, total - limit);
+        List<Map<String, Object>> puntos = new ArrayList<>();
+
+        for (int i = from; i < total; i++) {
+            Map<String, Object> punto = new LinkedHashMap<>();
+            punto.put("date", fechas.get(i).toString());
+            double o = opens.get(i);
+            double h = highs.get(i);
+            double l = lows.get(i);
+            double c = closes.get(i);
+            punto.put("open", o);
+            punto.put("high", h);
+            punto.put("low", l);
+            punto.put("close", c);
+
+            Double sma = null;
+            if (i >= window - 1) {
+                double sum = 0;
+                for (int k = i - window + 1; k <= i; k++) {
+                    sum += closes.get(k);
+                }
+                sma = sum / window;
+            }
+            punto.put("sma", sma);
+
+            puntos.add(punto);
+        }
+
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("symbol", sym);
+        out.put("window", window);
+        out.put("limit", limit);
+        out.put("points", puntos);
+        return out;
+    }
+
     private String clasificarRiesgo(double vol) {
 
         if (vol < 0.15) return "CONSERVADOR";
@@ -544,12 +688,10 @@ public class ETLServiceImpl implements ETLService {
         return "AGRESIVO";
     }
 
-    //252 dias bursatiles, no se cuenta fines de semana, festivos, ni dias sin taiding promedio
-    private double volatilidad(List<Double> retornos) {
-        return desviacion(retornos) * Math.sqrt(252);
-    }
-
     private double desviacion(List<Double> retornos) {
+        if (retornos.isEmpty()) {
+            return 0;
+        }
 
         //promedio
         double media = retornos.stream()

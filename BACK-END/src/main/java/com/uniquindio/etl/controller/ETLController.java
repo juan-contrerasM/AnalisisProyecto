@@ -101,4 +101,30 @@ public class ETLController {
         }
         return ResponseEntity.ok(etlService.obtenerAnalisis());
     }
+
+    @GetMapping("/correlation-matrix")
+    public ResponseEntity<?> correlationMatrix() {
+        if (!etlService.isEtlReady()) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(notReadyBody());
+        }
+        return ResponseEntity.ok(etlService.obtenerMatrizCorrelacion());
+    }
+
+    @GetMapping("/candlestick")
+    public ResponseEntity<?> candlestick(
+            @RequestParam String symbol,
+            @RequestParam(defaultValue = "20") int window,
+            @RequestParam(defaultValue = "120") int limit) {
+        if (!etlService.isEtlReady()) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(notReadyBody());
+        }
+        try {
+            return ResponseEntity.ok(etlService.obtenerOhlcConSma(symbol, window, limit));
+        } catch (IllegalArgumentException ex) {
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("error", "PARAMETRO_INVALIDO");
+            body.put("message", ex.getMessage());
+            return ResponseEntity.badRequest().body(body);
+        }
+    }
 }
