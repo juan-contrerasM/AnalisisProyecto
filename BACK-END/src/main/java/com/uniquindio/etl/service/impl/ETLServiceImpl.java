@@ -212,8 +212,9 @@ public class ETLServiceImpl implements ETLService {
         }
 
         return data.stream()
-                .sorted((a, b) -> Long.compare(b.getVolume(), a.getVolume()))
-                .limit(15)
+                .sorted(Comparator.comparingLong(StockData::getVolume).reversed()) // Ordenar de mayor a menor por volumen
+                .limit(15) // Tomar los 15 mayores
+                .sorted(Comparator.comparingLong(StockData::getVolume))//Volver a ordenar esos 15 de menor a mayor
                 .toList();
     }
 
