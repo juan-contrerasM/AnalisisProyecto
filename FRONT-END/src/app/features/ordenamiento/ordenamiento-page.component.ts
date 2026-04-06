@@ -119,7 +119,7 @@ export class OrdenamientoPageComponent implements OnInit {
             label: (ctx) => {
               const v = ctx.raw;
               const n = typeof v === 'number' ? v : Number(v);
-              return ` ${n.toLocaleString('es-CO')} unidades`;
+              return ` ${n.toLocaleString('es-CO')} Nanosegundos`;
             },
           },
         },
@@ -137,7 +137,7 @@ export class OrdenamientoPageComponent implements OnInit {
         y: {
           title: {
             display: true,
-            text: 'Tiempo (valor del servidor)',
+            text: 'Tiempo (Nanosegundos)',
             color: '#7d8ea3',
           },
           ticks: { color: '#7d8ea3' },
