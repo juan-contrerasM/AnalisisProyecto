@@ -34,20 +34,27 @@ export class AppStatusService {
   /** Copia de `ultimaActualizacion` para no perder la hora si el API devuelve null en algún borde. */
   private readonly cachedUltimaActualizacion = signal<string | null>(null);
 
+  private formatInterval(ms: number): string {
+    const totalSeconds = Math.round(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    const parts: string[] = [];
+    if (hours > 0) parts.push(`${hours} h`);
+    if (minutes > 0) parts.push(`${minutes} min`);
+    if (hours === 0 && minutes === 0) parts.push(`${seconds} s`);
+    return parts.join(' ');
+  }
+
   readonly statusPollHint = computed(() => {
-    const ms = environment.statusPollIntervalMs ?? 5_000;
-    const s = Math.round(ms / 1000);
-    return s >= 60 ? `Estado cada ${s / 60} min` : `Estado cada ${s}s`;
+    const ms = environment.statusPollIntervalMs ?? 3_600_000;
+    return `Estado cada ${this.formatInterval(ms)}`;
   });
 
   readonly autoRefreshHint = computed(() => {
     const ms = environment.autoRefreshIntervalMs;
-    const min = Math.round(ms / 60_000);
-    if (min >= 1 && ms % 60_000 === 0) {
-      return min === 1 ? 'Datos cada 1 min' : `Datos cada ${min} min`;
-    }
-    const s = Math.round(ms / 1000);
-    return `Datos cada ${s}s`;
+    return `Datos cada ${this.formatInterval(ms)}`;
   });
 
   /**
@@ -119,7 +126,7 @@ export class AppStatusService {
    * Poll rápido de estado; recarga pesada acotada por `autoRefreshIntervalMs`.
    */
   startPolling(destroyRef: DestroyRef): void {
-    const pollMs = environment.statusPollIntervalMs ?? 5_000;
+    const pollMs = environment.statusPollIntervalMs ?? 3_600_000;
     timer(0, pollMs)
       .pipe(
         takeUntilDestroyed(destroyRef),
@@ -172,7 +179,7 @@ export class AppStatusService {
       return;
     }
     const now = Date.now();
-    const minEvery = environment.autoRefreshIntervalMs ?? 60_000;
+    const minEvery = environment.autoRefreshIntervalMs ?? 3_900_000;
     if (this.lastHeavySuccessAt > 0 && now - this.lastHeavySuccessAt < minEvery) {
       return;
     }

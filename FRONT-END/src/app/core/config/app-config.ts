@@ -9,5 +9,5 @@ export function autoRefreshIntervalMs(): number {
 }
 
 export function statusPollIntervalMs(): number {
-  return environment.statusPollIntervalMs ?? 5_000;
+  return environment.statusPollIntervalMs ?? 3_600_000;
 }

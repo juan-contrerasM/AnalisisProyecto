@@ -24,7 +24,13 @@ export class ActivosPageComponent {
     if (!rows.length) {
       return [{ key: 'date', label: 'Fecha' }];
     }
-    return Object.keys(rows[0]).map((key) => ({
+    const keys = Object.keys(rows[0]);
+    keys.sort((a, b) => {
+      if (a === 'date') return -1;
+      if (b === 'date') return 1;
+      return a.localeCompare(b);
+    });
+    return keys.map((key) => ({
       key,
       label: key === 'date' ? 'Fecha' : key,
     }));

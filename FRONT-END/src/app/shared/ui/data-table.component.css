@@ -3,6 +3,7 @@
   align-items: center;
   gap: 1rem;
   margin-bottom: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .filter {
@@ -19,6 +20,44 @@
 .count {
   font-size: 0.8rem;
   color: var(--muted);
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.page-size {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.page-size select {
+  padding: 0.28rem 0.45rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-0);
+  color: var(--text);
+}
+
+.nav {
+  width: 30px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-0);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.nav:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .table-wrap {
@@ -46,7 +85,6 @@ th {
   position: sticky;
   top: 0;
   background: var(--surface-2);
-  cursor: pointer;
   user-select: none;
   font-weight: 600;
   color: var(--text-secondary);
@@ -54,6 +92,27 @@ th {
 
 th.sorted {
   color: var(--accent-2);
+}
+
+.th-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.th-btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 
 .sort-ind {

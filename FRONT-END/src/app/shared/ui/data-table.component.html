@@ -6,21 +6,42 @@
     [value]="filterText()"
     (input)="filterText.set($any($event.target).value)"
   />
-  <span class="count">{{ filteredRows().length }} filas</span>
+  <div class="pager">
+    <label class="page-size">
+      <span>Tamaño</span>
+      <select
+        [value]="pageSize()"
+        (change)="setPageSize(+$any($event.target).value)"
+        aria-label="Tamaño de página"
+      >
+        <option [value]="10">10</option>
+        <option [value]="25">25</option>
+        <option [value]="50">50</option>
+        <option [value]="100">100</option>
+      </select>
+    </label>
+    <button class="nav" (click)="prevPage()" [disabled]="page() <= 1">‹</button>
+    <span class="count">
+      Página {{ page() }} / {{ totalPages() }} · {{ totalRows() }} filas
+    </span>
+    <button class="nav" (click)="nextPage()" [disabled]="page() >= totalPages()">›</button>
+  </div>
 </div>
 <div class="table-wrap">
   <table>
     <thead>
       <tr>
         @for (col of columns(); track col.key) {
-          <th (click)="sortBy(col.key)" [class.sorted]="sortKey() === col.key">
-            {{ col.label }} <span class="sort-ind">{{ sortIcon(col.key) }}</span>
+          <th [class.sorted]="sortKey() === col.key">
+            <button class="th-btn" type="button" (click)="sortBy(col.key)">
+              {{ col.label }} <span class="sort-ind">{{ sortIcon(col.key) }}</span>
+            </button>
           </th>
         }
       </tr>
     </thead>
     <tbody>
-      @for (row of filteredRows(); track $index) {
+      @for (row of pagedRows(); track $index) {
         <tr>
           @for (col of columns(); track col.key) {
             <td>{{ displayCell(row, col.key) }}</td>

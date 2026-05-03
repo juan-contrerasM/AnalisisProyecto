@@ -3,7 +3,7 @@ export const environment = {
   /** Vacío: mismo origen en `ng serve` + proxy hacia Spring (ver proxy.conf.json). */
   apiUrl: '',
   /** Consulta ligera GET /etl/status (detectar EJECUTANDO rápido). */
-  statusPollIntervalMs: 5_000,
+  statusPollIntervalMs: 3_600_000,
   /** Mínimo entre recargas pesadas dataset + análisis cuando LISTO. */
-  autoRefreshIntervalMs: 60_000,
+  autoRefreshIntervalMs: 3_900_000,
 };
