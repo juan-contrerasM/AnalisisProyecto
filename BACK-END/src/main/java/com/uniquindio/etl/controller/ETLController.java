@@ -1,6 +1,7 @@
 package com.uniquindio.etl.controller;
 
 import com.uniquindio.etl.model.SortingResultData;
+import com.uniquindio.etl.model.ReturnSeriesResponse;
 import com.uniquindio.etl.service.ETLService;
 import com.uniquindio.etl.sorting.SortingBenchmarkService;
 import lombok.RequiredArgsConstructor;
@@ -88,7 +89,8 @@ public class ETLController {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(notReadyBody());
         }
         try {
-            return ResponseEntity.ok(etlService.obtenerSeries(asset1, asset2));
+            ReturnSeriesResponse resp = etlService.obtenerSeries(asset1, asset2);
+            return ResponseEntity.ok(resp);
         } catch (IllegalStateException ex) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(notReadyBody());
         }

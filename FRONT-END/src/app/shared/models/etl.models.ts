@@ -61,7 +61,10 @@ export interface SimilarityResult {
   puntosAlineados?: number;
 }
 
-export type SeriesResponse = Record<string, number[]>;
+export interface ReturnSeriesResponse {
+  dates: string[];
+  series: Record<string, number[]>;
+}
 
 export interface EtlNotReadyBody {
   error: string;

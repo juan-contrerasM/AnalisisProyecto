@@ -54,6 +54,15 @@ select {
   color: var(--text);
 }
 
+input[type='date'] {
+  min-width: 150px;
+  padding: 0.42rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-0);
+  color: var(--text);
+}
+
 .btn {
   border-radius: 8px;
   padding: 0.45rem 0.9rem;

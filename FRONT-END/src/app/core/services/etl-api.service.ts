@@ -9,7 +9,7 @@ import {
   CorrelationMatrixResponse,
   DatasetRow,
   EtlStatusResponse,
-  SeriesResponse,
+  ReturnSeriesResponse,
   SimilarityResult,
   SortingResultData,
 } from '../../shared/models/etl.models';
@@ -76,8 +76,8 @@ export class EtlApiService {
     });
   }
 
-  getSeries(asset1: string, asset2: string): Observable<SeriesResponse> {
-    return this.http.get<SeriesResponse>(`${this.base}/series`, {
+  getSeries(asset1: string, asset2: string): Observable<ReturnSeriesResponse> {
+    return this.http.get<ReturnSeriesResponse>(`${this.base}/series`, {
       params: { asset1, asset2 },
     });
   }

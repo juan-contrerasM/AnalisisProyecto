@@ -3,7 +3,7 @@ import { ChartConfiguration, ChartDataset, ChartOptions } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { AppStatusService } from '../../core/services/app-status.service';
 import { EtlApiService } from '../../core/services/etl-api.service';
-import { SimilarityResult } from '../../shared/models/etl.models';
+import { ReturnSeriesResponse, SimilarityResult } from '../../shared/models/etl.models';
 import { PageSkeletonComponent } from '../../shared/ui/page-skeleton.component';
 
 @Component({
@@ -18,6 +18,8 @@ export class SimilitudPageComponent {
 
   protected readonly asset1 = signal('');
   protected readonly asset2 = signal('');
+  protected readonly dateFrom = signal<string>('');
+  protected readonly dateTo = signal<string>('');
   protected readonly result = signal<SimilarityResult | null>(null);
   protected readonly seriesChart = signal<ChartConfiguration<'line'> | null>(null);
   protected readonly loading = signal(false);
@@ -109,6 +111,19 @@ export class SimilitudPageComponent {
         this.asset2.set(syms[1]);
       }
     });
+
+    // Inicializa rango de fechas con el dataset actual (si existe)
+    effect(() => {
+      const rows = this.status.dataset() as Record<string, unknown>[];
+      if (!rows.length) return;
+      const dates = rows
+        .map((r) => String(r['date'] ?? ''))
+        .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d))
+        .sort();
+      if (!dates.length) return;
+      if (!this.dateFrom()) this.dateFrom.set(dates[0]);
+      if (!this.dateTo()) this.dateTo.set(dates[dates.length - 1]);
+    });
   }
 
   protected fmt(n: number): string {
@@ -144,49 +159,121 @@ export class SimilitudPageComponent {
     if (!a || !b) return;
     this.seriesLoading.set(true);
     this.api.getSeries(a, b).subscribe({
-      next: (map) => {
-        const s1 = map[a] ?? [];
-        const s2 = map[b] ?? [];
-        const n = Math.min(s1.length, s2.length);
-        const labels = Array.from({ length: n }, (_, i) => String(i));
-        this.seriesChart.set({
-          type: 'line',
-          data: {
-            labels,
-            datasets: [
-              {
-                label: 'Retornos ' + a,
-                data: s1.slice(-n),
-                borderColor: 'rgba(56, 189, 248, 0.95)',
-                backgroundColor: 'rgba(56, 189, 248, 0.1)',
-                pointRadius: 0,
-                tension: 0.2,
-              },
-              {
-                label: 'Retornos ' + b,
-                data: s2.slice(-n),
-                borderColor: 'rgba(251, 191, 36, 0.95)',
-                backgroundColor: 'rgba(251, 191, 36, 0.1)',
-                pointRadius: 0,
-                tension: 0.2,
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { labels: { color: '#9fb0c3' } } },
-            scales: {
-              x: { ticks: { color: '#7d8ea3' }, grid: { color: 'rgba(148,163,184,0.12)' } },
-              y: { ticks: { color: '#7d8ea3' }, grid: { color: 'rgba(148,163,184,0.12)' } },
-            },
-          },
-        });
+      next: (resp) => {
+        const { labels, s1, s2 } = this.filterSeriesByDate(resp, a, b);
+        this.seriesChart.set(this.buildSeriesChart(labels, a, s1, b, s2));
         this.seriesLoading.set(false);
       },
       error: () => {
+        this.error.set('No se pudieron cargar las series de retornos.');
         this.seriesLoading.set(false);
       },
     });
+  }
+
+  private filterSeriesByDate(
+    resp: ReturnSeriesResponse,
+    asset1: string,
+    asset2: string,
+  ): { labels: string[]; s1: number[]; s2: number[] } {
+    const dates = resp?.dates ?? [];
+    const s1All = resp?.series?.[asset1] ?? [];
+    const s2All = resp?.series?.[asset2] ?? [];
+
+    const n = Math.min(dates.length, s1All.length, s2All.length);
+    const from = this.dateFrom();
+    const to = this.dateTo();
+
+    const labels: string[] = [];
+    const s1: number[] = [];
+    const s2: number[] = [];
+
+    for (let i = 0; i < n; i++) {
+      const d = dates[i];
+      if (!d) continue;
+      if (from && d < from) continue;
+      if (to && d > to) continue;
+      labels.push(d);
+      s1.push(s1All[i]);
+      s2.push(s2All[i]);
+    }
+
+    if (labels.length < 1) {
+      throw new Error('No hay retornos alineados en ese rango.');
+    }
+
+    return { labels, s1, s2 };
+  }
+
+  private buildSeriesChart(
+    labels: string[],
+    asset1: string,
+    s1: number[],
+    asset2: string,
+    s2: number[],
+  ): ChartConfiguration<'line'> {
+    return {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Retornos ' + asset1,
+            data: s1,
+            borderColor: 'rgba(56, 189, 248, 0.95)',
+            backgroundColor: 'rgba(56, 189, 248, 0.1)',
+            pointRadius: 0,
+            tension: 0.2,
+          },
+          {
+            label: 'Retornos ' + asset2,
+            data: s2,
+            borderColor: 'rgba(251, 191, 36, 0.95)',
+            backgroundColor: 'rgba(251, 191, 36, 0.1)',
+            pointRadius: 0,
+            tension: 0.2,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { labels: { color: '#9fb0c3' } },
+          tooltip: {
+            callbacks: {
+              title: (items) => {
+                const i = items?.[0];
+                return i?.label ? `Fecha: ${i.label}` : 'Fecha';
+              },
+              label: (ctx) => {
+                const raw = ctx.raw;
+                const v = typeof raw === 'number' ? raw : Number(raw);
+                const fmt = Number.isFinite(v) ? v.toFixed(6) : String(raw);
+                return `${ctx.dataset.label}: ${fmt}`;
+              },
+            },
+          },
+        },
+        scales: {
+          x: {
+            ticks: {
+              color: '#7d8ea3',
+              maxRotation: 0,
+              autoSkip: true,
+              maxTicksLimit: 10,
+            },
+            grid: { color: 'rgba(148,163,184,0.12)' },
+            title: { display: true, text: 'Fecha', color: '#7d8ea3' },
+          },
+          y: {
+            ticks: { color: '#7d8ea3' },
+            grid: { color: 'rgba(148,163,184,0.12)' },
+            title: { display: true, text: 'Retorno', color: '#7d8ea3' },
+          },
+        },
+      },
+    };
   }
 }

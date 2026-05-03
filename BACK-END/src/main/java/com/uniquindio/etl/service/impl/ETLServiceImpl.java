@@ -5,6 +5,7 @@ import com.uniquindio.etl.etl.loader.DatasetWriter;
 import com.uniquindio.etl.etl.transformer.DataAligner;
 import com.uniquindio.etl.etl.transformer.DataCleaner;
 import com.uniquindio.etl.model.EtlEstado;
+import com.uniquindio.etl.model.ReturnSeriesResponse;
 import com.uniquindio.etl.model.StockData;
 import com.uniquindio.etl.service.ETLService;
 import com.uniquindio.etl.service.SimilarityService;
@@ -418,6 +419,29 @@ public class ETLServiceImpl implements ETLService {
         }
     }
 
+    /** Retornos diarios alineados con fechas: solo fechas donde ambos activos tienen dato numérico. */
+    private void extraerParAlineadoConFechas(
+            String asset1,
+            String asset2,
+            List<String> outDates,
+            List<Double> out1,
+            List<Double> out2
+    ) {
+        outDates.clear();
+        out1.clear();
+        out2.clear();
+        for (Map<String, Object> fila : retornosGlobal) {
+            Object o1 = fila.get(asset1);
+            Object o2 = fila.get(asset2);
+            if (o1 instanceof Number && o2 instanceof Number) {
+                Object d = fila.get("date");
+                outDates.add(d == null ? null : String.valueOf(d));
+                out1.add(((Number) o1).doubleValue());
+                out2.add(((Number) o2).doubleValue());
+            }
+        }
+    }
+
     // SIMILITUD
     @Override
     public Map<String, Object> calcularSimilitud(String asset1, String asset2) {
@@ -464,17 +488,13 @@ public class ETLServiceImpl implements ETLService {
     }
 
     @Override
-    public Map<String, List<Double>> obtenerSeries(String asset1, String asset2) {
+    public ReturnSeriesResponse obtenerSeries(String asset1, String asset2) {
         requireData();
+        List<String> dates = new ArrayList<>();
         List<Double> serie1 = new ArrayList<>();
         List<Double> serie2 = new ArrayList<>();
-        extraerParAlineado(asset1, asset2, serie1, serie2);
-
-        Map<String, List<Double>> resultado = new LinkedHashMap<>();
-        resultado.put(asset1, serie1);
-        resultado.put(asset2, serie2);
-
-        return resultado;
+        extraerParAlineadoConFechas(asset1, asset2, dates, serie1, serie2);
+        return ReturnSeriesResponse.of(asset1, serie1, asset2, serie2, dates);
     }
 
     public Map<String, Object> analizarRequerimiento3(

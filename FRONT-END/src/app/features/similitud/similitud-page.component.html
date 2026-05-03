@@ -24,6 +24,14 @@
           }
         </select>
       </label>
+      <label>
+        Desde
+        <input type="date" [value]="dateFrom()" (change)="dateFrom.set($any($event.target).value)" />
+      </label>
+      <label>
+        Hasta
+        <input type="date" [value]="dateTo()" (change)="dateTo.set($any($event.target).value)" />
+      </label>
       <button type="button" class="btn primary" (click)="compare()" [disabled]="loading() || !status.dataReady()">
         @if (loading()) { Calculando… } @else { Comparar }
       </button>
@@ -73,6 +81,9 @@
   @if (seriesChart(); as sc) {
     <div class="chart-card">
       <h2>Retornos diarios alineados</h2>
+      <p class="chart-note">
+        Eje X: fechas del dataset (ISO). Eje Y: retorno diario (P<sub>t</sub> − P<sub>t−1</sub>) / P<sub>t−1</sub>.
+      </p>
       <div class="chart-host tall">
         <canvas baseChart [data]="sc.data" [options]="sc.options" [type]="sc.type"></canvas>
       </div>
